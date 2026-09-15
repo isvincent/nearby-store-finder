@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="color-scheme" content="light" />
+  <title>旅遊周邊商店搜尋器</title>
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --primary-soft: #ccfbf1;
+      --accent: #f59e0b;
+      --danger: #dc2626;
+      --ink: #183153;
+      --muted: #64748b;
+      --line: #dbe5ec;
+      --surface: #ffffff;
+      --surface-soft: #f5faf9;
+      --shadow: 0 12px 34px rgba(15, 118, 110, 0.13);
+      --radius: 18px;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #eef7f6;
+      color: var(--ink);
+      font-size: 17px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    button, input, select { font: inherit; }
+    button { touch-action: manipulation; }
+
+    body {
+      padding-bottom: env(safe-area-inset-bottom);
+      background:
+        radial-gradient(circle at 100% 0%, rgba(251, 191, 36, 0.18), transparent 26rem),
+        linear-gradient(180deg, #ecfeff 0, #f8fafc 38rem);
+    }
+
+    .app-shell {
+      width: min(100%, 1180px);
+      margin: 0 auto;
+      padding: 12px 12px 34px;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 4px 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 15px;
+      background: linear-gradient(135deg, var(--primary), #14b8a6);
+      color: white;
+      font-size: 25px;
+      box-shadow: var(--shadow);
+      flex: 0 0 auto;
+    }
+
+    h1 {
+      font-size: clamp(1.22rem, 4vw, 1.72rem);
+      margin: 0;
+      line-height: 1.18;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .icon-button {
+      width: 45px;
+      height: 45px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.92);
+      color: var(--ink);
+      cursor: pointer;
+      box-shadow: 0 5px 16px rgba(15, 23, 42, .06);
+    }
+
+    .card {
+      background: rgba(255,255,255,.95);
+      border: 1px solid rgba(203, 213, 225, .75);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .control-card { padding: 16px; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    .field-label {
+      display: block;
+      margin: 0 0 7px;
+      font-weight: 750;
+      font-size: .94rem;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) auto;
+      gap: 8px;
+    }
+
+    input[type="text"], input[type="password"], select {
+      width: 100%;
+      min-height: 49px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 13px;
+      padding: 11px 13px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      transition: .15s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: #14b8a6;
+      box-shadow: 0 0 0 4px rgba(20,184,166,.14);
+    }
+
+    .button {
+      min-height: 49px;
+      border: 0;
+      border-radius: 13px;
+      padding: 10px 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .12s ease, filter .12s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      text-decoration: none;
+    }
+
+    .button:active { transform: scale(.98); }
+    .button:disabled { opacity: .55; cursor: not-allowed; }
+    .button-primary { color: #fff; background: linear-gradient(135deg, var(--primary), #14b8a6); }
+    .button-secondary { color: var(--primary-dark); background: var(--primary-soft); }
+    .button-ghost { color: var(--ink); background: #f1f5f9; }
+    .button-danger { color: #991b1b; background: #fee2e2; }
+    .button-small { min-height: 39px; padding: 8px 11px; font-size: .86rem; border-radius: 11px; }
+
+    .helper-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 9px;
+    }
+
+    .center-info {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f0fdfa;
+      color: #115e59;
+      font-size: .86rem;
+      line-height: 1.45;
+    }
+
+    .two-column {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 8px;
+    }
+
+    .choice {
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-height: 48px;
+      gap: 8px;
+      padding: 10px 11px;
+      border: 1.5px solid #d8e2e8;
+      border-radius: 13px;
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+      font-size: .9rem;
+      font-weight: 700;
+    }
+
+    .choice:has(input:checked) {
+      border-color: #14b8a6;
+      background: #ecfdf5;
+      color: #115e59;
+    }
+
+    .choice input { width: 19px; height: 19px; accent-color: var(--primary); }
+    .choice .emoji { font-size: 1.25rem; }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .map-card {
+      overflow: hidden;
+      margin-top: 14px;
+    }
+
+    #map {
+      width: 100%;
+      height: min(54vh, 530px);
+      min-height: 355px;
+      background: #dbeafe;
+    }
+
+    .map-placeholder {
+      display: grid;
+      place-items: center;
+      text-align: center;
+      height: 100%;
+      padding: 28px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .map-caption {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 13px;
+      background: #fff;
+      color: var(--muted);
+      font-size: .82rem;
+      border-top: 1px solid var(--line);
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+      padding: 13px 15px;
+    }
+
+    .status-main { font-weight: 850; }
+    .status-sub { color: var(--muted); font-size: .84rem; margin-top: 3px; }
+
+    .toolbar {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .results {
+      display: grid;
+      gap: 11px;
+      margin-top: 11px;
+    }
+
+    .result-card {
+      position: relative;
+      overflow: hidden;
+      padding: 14px;
+    }
+
+    .result-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 5px;
+      background: var(--marker-color, var(--primary));
+    }
+
+    .result-top {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 10px;
+    }
+
+    .result-icon {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      background: color-mix(in srgb, var(--marker-color, var(--primary)) 14%, white);
+      font-size: 1.35rem;
+    }
+
+    .result-name {
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.38;
+    }
+
+    .distance-pill {
+      white-space: nowrap;
+      border-radius: 999px;
+      padding: 6px 9px;
+      color: #0f172a;
+      background: #f1f5f9;
+      font-size: .79rem;
+      font-weight: 850;
+    }
+
+    .address {
+      margin: 7px 0 0 52px;
+      color: var(--muted);
+      font-size: .85rem;
+      line-height: 1.5;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 10px 0 0 52px;
+    }
+
+    .tag {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #475569;
+      font-size: .74rem;
+      font-weight: 750;
+    }
+
+    .result-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 12px 0 0 52px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 18px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .loading-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin: 0 2px;
+      border-radius: 999px;
+      background: currentColor;
+      animation: pulse 1s infinite alternate;
+    }
+    .loading-dot:nth-child(2) { animation-delay: .2s; }
+    .loading-dot:nth-child(3) { animation-delay: .4s; }
+    @keyframes pulse { to { opacity: .2; transform: translateY(-3px); } }
+
+    .modal-backdrop, .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: rgba(15,23,42,.56);
+      backdrop-filter: blur(5px);
+    }
+
+    .hidden { display: none !important; }
+
+    .modal {
+      width: min(100%, 560px);
+      max-height: min(92vh, 780px);
+      overflow: auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: 0 24px 80px rgba(15,23,42,.28);
+    }
+
+    .modal h2 { margin: 0 0 8px; font-size: 1.35rem; }
+    .modal p, .modal li { color: #475569; line-height: 1.62; }
+    .modal ul, .modal ol { padding-left: 1.35rem; }
+
+    .notice {
+      padding: 12px 13px;
+      border-radius: 13px;
+      background: #fff7ed;
+      color: #9a3412;
+      line-height: 1.55;
+      font-size: .86rem;
+      border: 1px solid #fed7aa;
+    }
+
+    .check-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin-top: 10px;
+      font-size: .88rem;
+      color: #475569;
+      line-height: 1.5;
+    }
+    .check-line input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: var(--primary); }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .candidate-list { display: grid; gap: 9px; margin-top: 13px; }
+    .candidate-button {
+      width: 100%;
+      border: 1.5px solid var(--line);
+      background: #fff;
+      border-radius: 14px;
+      padding: 12px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .candidate-button strong { display: block; color: var(--ink); font-size: .98rem; }
+    .candidate-button span { display: block; color: var(--muted); margin-top: 4px; font-size: .82rem; line-height: 1.45; }
+
+    .toast {
+      position: fixed;
+      z-index: 2000;
+      left: 50%;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      transform: translate(-50%, 20px);
+      width: min(calc(100% - 30px), 520px);
+      padding: 12px 15px;
+      border-radius: 14px;
+      color: #fff;
+      background: #0f172a;
+      box-shadow: 0 16px 38px rgba(15,23,42,.25);
+      opacity: 0;
+      pointer-events: none;
+      transition: .22s ease;
+      text-align: center;
+      font-size: .9rem;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.error { background: #991b1b; }
+
+    .marker-pin {
+      display: grid;
+      place-items: center;
+      width: 37px;
+      height: 37px;
+      border: 3px solid #fff;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      color: #fff;
+      box-shadow: 0 5px 14px rgba(15,23,42,.26);
+      background: var(--marker-color, var(--primary));
+    }
+    .marker-pin span { transform: rotate(45deg); font-size: 17px; }
+
+    .center-pin {
+      width: 42px;
+      height: 42px;
+      background: #111827;
+      animation: centerPulse 1.8s infinite;
+    }
+    @keyframes centerPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(17,24,39,.36), 0 5px 14px rgba(15,23,42,.3); }
+      50% { box-shadow: 0 0 0 12px rgba(17,24,39,0), 0 5px 14px rgba(15,23,42,.3); }
+    }
+
+    .info-box { min-width: 210px; max-width: 270px; line-height: 1.45; color: #334155; }
+    .info-box strong { display: block; margin-bottom: 4px; color: #0f172a; font-size: .97rem; }
+    .info-box a { display: inline-block; margin-top: 7px; color: #0f766e; font-weight: 800; }
+
+    @media (min-width: 760px) {
+      .app-shell { padding: 18px 20px 44px; }
+      .two-column { grid-template-columns: 0.82fr 1.18fr; }
+      .option-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .desktop-layout { display: grid; grid-template-columns: minmax(340px, .78fr) minmax(0, 1.22fr); gap: 14px; align-items: start; }
+      .desktop-layout .map-card { margin-top: 0; position: sticky; top: 12px; }
+      #map { height: calc(100vh - 120px); min-height: 620px; }
+      .results { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .status-bar { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 420px) {
+      html, body { font-size: 16px; }
+      .app-shell { padding-inline: 9px; }
+      .control-card { padding: 13px; }
+      .search-row { grid-template-columns: 1fr; }
+      .search-row .button { width: 100%; }
+      .option-grid { grid-template-columns: 1fr 1fr; }
+      .action-row { grid-template-columns: 1fr; }
+      .result-top { grid-template-columns: 40px minmax(0,1fr); }
+      .distance-pill { grid-column: 2; justify-self: start; }
+      .address, .tags, .result-actions { margin-left: 50px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">🧭</div>
+        <div>
+          <h1>旅遊周邊商店搜尋器</h1>
+          <div class="subtitle">手機單機版・地圖資料需連線</div>
+        </div>
+      </div>
+      <button class="icon-button" id="openSettingsButton" aria-label="設定 API 金鑰" title="設定">⚙️</button>
+    </header>
+
+    <div class="desktop-layout">
+      <section>
+        <div class="card control-card">
+          <h2 class="section-title"><span>📍 設定搜尋中心</span><span id="apiStatusBadge" class="tag">尚未載入地圖</span></h2>
+          <label class="field-label" for="locationQuery">輸入飯店、車站、景點或地址</label>
+          <div class="search-row">
+            <input id="locationQuery" type="text" autocomplete="off" placeholder="例如：仙台站、東京車站、飯店名稱" />
+            <button class="button button-secondary" id="findLocationButton">搜尋地點</button>
+          </div>
+          <div class="helper-row">
+            <button class="button button-ghost button-small" id="currentLocationButton">📡 使用目前位置</button>
+            <button class="button button-ghost button-small" id="useMapCenterButton">🎯 使用地圖中心</button>
+          </div>
+          <div class="center-info" id="centerInfo">可搜尋地點、點擊地圖，或使用目前位置來設定中心點。</div>
+
+          <div class="two-column">
+            <div>
+              <label class="field-label" for="radiusSelect">搜尋半徑</label>
+              <select id="radiusSelect">
+                <option value="300">300 公尺</option>
+                <option value="500">500 公尺</option>
+                <option value="800">800 公尺</option>
+                <option value="1000" selected>1 公里</option>
+                <option value="1500">1.5 公里</option>
+                <option value="2000">2 公里</option>
+                <option value="3000">3 公里</option>
+              </select>
+            </div>
+            <div>
+              <div class="field-label">商店與設施類型</div>
+              <div class="option-grid" id="categoryOptions"></div>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button class="button button-primary" id="searchNearbyButton">🔎 搜尋周邊商店</button>
+            <button class="button button-ghost" id="clearResultsButton" title="清除搜尋結果">清除</button>
+          </div>
+        </div>
+
+        <div class="card status-bar">
+          <div>
+            <div class="status-main" id="resultStatus">尚未搜尋</div>
+            <div class="status-sub" id="resultSubStatus">搜尋結果會依直線距離排序。</div>
+          </div>
+          <div class="toolbar">
+            <select id="sortSelect" aria-label="排序方式" style="width:auto; min-height:40px; padding-block:6px;">
+              <option value="distance">距離最近</option>
+              <option value="name">名稱排序</option>
+              <option value="category">分類排序</option>
+            </select>
+            <button class="button button-ghost button-small" id="copyButton">複製</button>
+            <button class="button button-ghost button-small" id="csvButton">CSV</button>
+          </div>
+        </div>
+
+        <div class="results" id="resultsList">
+          <div class="card empty-state">設定搜尋中心與商店類型後，按下「搜尋周邊商店」。</div>
+        </div>
+      </section>
+
+      <section class="card map-card">
+        <div id="map">
+          <div class="map-placeholder">
+            <div>
+              <div style="font-size:2.5rem">🗺️</div>
+              <strong>需要先設定 Google Maps API 金鑰</strong><br />
+              金鑰只會由這個 HTML 在手機瀏覽器中使用。
+            </div>
+          </div>
+        </div>
+        <div class="map-caption">
+          <span>點一下地圖即可改變搜尋中心</span>
+          <span id="mapCenterLabel">尚未載入</span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="modal-backdrop hidden" id="settingsBackdrop" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <section class="modal">
+      <h2 id="settingsTitle">Google Maps API 設定</h2>
+      <p>本工具是本機 HTML，但地圖與商店資料仍會透過網路向 Google Maps Platform 查詢。</p>
+      <div class="notice">
+        <strong>安全提醒：</strong>以 <code>file://</code> 開啟本機 HTML 時，網站來源限制通常無法可靠驗證。請使用獨立測試金鑰、只允許 Maps JavaScript API 與 Places API（New），並設定每日配額及預算警示。
+      </div>
+      <label class="field-label" for="apiKeyInput" style="margin-top:14px;">API 金鑰</label>
+      <input id="apiKeyInput" type="password" spellcheck="false" autocomplete="off" placeholder="AIza..." />
+      <label class="check-line">
+        <input id="rememberKeyCheckbox" type="checkbox" />
+        <span>記住在這台裝置。金鑰將保存在此瀏覽器的 localStorage；取消勾選則只在本次開啟期間使用。</span>
+      </label>
+      <details style="margin-top:13px;">
+        <summary style="font-weight:800; cursor:pointer;">Google Cloud 必要設定</summary>
+        <ol>
+          <li>啟用 <strong>Maps JavaScript API</strong>。</li>
+          <li>啟用 <strong>Places API（New）</strong>。</li>
+          <li>API restrictions 只勾選上面兩項。</li>
+          <li>本機 file:// 版本通常要把 Application restrictions 設為「None」才能運作，因此務必限制配額。</li>
+        </ol>
+      </details>
+      <div class="modal-actions">
+        <button class="button button-danger button-small" id="forgetKeyButton">清除已儲存金鑰</button>
+        <button class="button button-ghost button-small" id="closeSettingsButton">取消</button>
+        <button class="button button-primary" id="loadMapButton">載入地圖</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="sheet-backdrop hidden" id="candidateBackdrop" role="dialog" aria-modal="true" aria-labelledby="candidateTitle">
+    <section class="modal">
+      <h2 id="candidateTitle">選擇搜尋中心</h2>
+      <p style="margin-top:0">請選擇最符合的地點。</p>
+      <div class="candidate-list" id="candidateList"></div>
+      <div class="modal-actions">
+        <button class="button button-ghost" id="closeCandidateButton">取消</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    'use strict';
+
+    const STORAGE_KEYS = {
+      apiKey: 'travelNearbyFinder.apiKey',
+      radius: 'travelNearbyFinder.radius',
+      categories: 'travelNearbyFinder.categories',
+      center: 'travelNearbyFinder.center'
+    };
+
+    const DEFAULT_CENTER = { lat: 25.0478, lng: 121.5170 };
+
+    const CATEGORY_GROUPS = {
+      drugstore: {
+        label: '藥妝／藥局', emoji: '💊', color: '#dc2626',
+        types: ['drugstore', 'pharmacy', 'cosmetics_store']
+      },
+      convenience: {
+        label: '便利商店', emoji: '🏪', color: '#2563eb',
+        types: ['convenience_store']
+      },
+      supermarket: {
+        label: '超市／食品', emoji: '🛒', color: '#16a34a',
+        types: ['supermarket', 'grocery_store']
+      },
+      shopping: {
+        label: '百貨／購物', emoji: '🛍️', color: '#9333ea',
+        types: ['department_store', 'shopping_mall', 'discount_store']
+      },
+      atm: {
+        label: 'ATM', emoji: '🏧', color: '#0891b2',
+        types: ['atm']
+      },
+      laundry: {
+        label: '洗衣店', emoji: '🧺', color: '#0d9488',
+        types: ['laundry']
+      },
+      food: {
+        label: '餐廳／咖啡', emoji: '🍽️', color: '#ea580c',
+        types: ['restaurant', 'cafe']
+      },
+      parking: {
+        label: '停車場', emoji: '🅿️', color: '#475569',
+        types: ['parking']
+      }
+    };
+
+    const state = {
+      apiKey: '',
+      mapReady: false,
+      map: null,
+      center: { ...DEFAULT_CENTER },
+      centerName: '台北車站附近',
+      centerMarker: null,
+      radiusCircle: null,
+      resultMarkers: [],
+      infoWindow: null,
+      libraries: {},
+      places: [],
+      searchWarnings: [],
+      isLoading: false
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+
+    const elements = {
+      map: $('#map'),
+      locationQuery: $('#locationQuery'),
+      findLocationButton: $('#findLocationButton'),
+      currentLocationButton: $('#currentLocationButton'),
+      useMapCenterButton: $('#useMapCenterButton'),
+      radiusSelect: $('#radiusSelect'),
+      categoryOptions: $('#categoryOptions'),
+      searchNearbyButton: $('#searchNearbyButton'),
+      clearResultsButton: $('#clearResultsButton'),
+      centerInfo: $('#centerInfo'),
+      mapCenterLabel: $('#mapCenterLabel'),
+      resultStatus: $('#resultStatus'),
+      resultSubStatus: $('#resultSubStatus'),
+      resultsList: $('#resultsList'),
+      sortSelect: $('#sortSelect'),
+      copyButton: $('#copyButton'),
+      csvButton: $('#csvButton'),
+      apiStatusBadge: $('#apiStatusBadge'),
+      settingsBackdrop: $('#settingsBackdrop'),
+      apiKeyInput: $('#apiKeyInput'),
+      rememberKeyCheckbox: $('#rememberKeyCheckbox'),
+      openSettingsButton: $('#openSettingsButton'),
+      closeSettingsButton: $('#closeSettingsButton'),
+      loadMapButton: $('#loadMapButton'),
+      forgetKeyButton: $('#forgetKeyButton'),
+      candidateBackdrop: $('#candidateBackdrop'),
+      candidateList: $('#candidateList'),
+      closeCandidateButton: $('#closeCandidateButton'),
+      toast: $('#toast')
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, (char) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      })[char]);
+    }
+
+    function showToast(message, type = 'normal') {
+      elements.toast.textContent = message;
+      elements.toast.className = `toast show${type === 'error' ? ' error' : ''}`;
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => {
+        elements.toast.className = 'toast';
+      }, 3000);
+    }
+
+    function setBusy(isBusy, message = '') {
+      state.isLoading = isBusy;
+      const buttons = [
+        elements.findLocationButton,
+        elements.currentLocationButton,
+        elements.useMapCenterButton,
+        elements.searchNearbyButton
+      ];
+      buttons.forEach((button) => button.disabled = isBusy || !state.mapReady);
+      if (isBusy && message) {
+        elements.resultStatus.innerHTML = `${escapeHtml(message)} <span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span>`;
+      }
+    }
+
+    function formatDistance(meters) {
+      if (!Number.isFinite(meters)) return '未知距離';
+      if (meters < 1000) return `${Math.round(meters)} 公尺`;
+      return `${(meters / 1000).toFixed(meters < 10000 ? 1 : 0)} 公里`;
+    }
+
+    function toLiteral(location) {
+      if (!location) return null;
+      const lat = typeof location.lat === 'function' ? location.lat() : Number(location.lat);
+      const lng = typeof location.lng === 'function' ? location.lng() : Number(location.lng);
+      return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+    }
+
+    function haversineMeters(a, b) {
+      const rad = (value) => value * Math.PI / 180;
+      const earthRadius = 6371000;
+      const dLat = rad(b.lat - a.lat);
+      const dLng = rad(b.lng - a.lng);
+      const lat1 = rad(a.lat);
+      const lat2 = rad(b.lat);
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+      return earthRadius * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    }
+
+    function getSelectedCategories() {
+      return [...elements.categoryOptions.querySelectorAll('input[type="checkbox"]:checked')]
+        .map((input) => input.value);
+    }
+
+    function savePreferences() {
+      localStorage.setItem(STORAGE_KEYS.radius, elements.radiusSelect.value);
+      localStorage.setItem(STORAGE_KEYS.categories, JSON.stringify(getSelectedCategories()));
+      localStorage.setItem(STORAGE_KEYS.center, JSON.stringify({ center: state.center, name: state.centerName }));
+    }
+
+    function buildCategoryOptions() {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.categories) || 'null');
+      const defaultSelected = ['drugstore', 'convenience', 'supermarket', 'shopping', 'atm'];
+      const selected = Array.isArray(saved) ? saved : defaultSelected;
+      elements.categoryOptions.innerHTML = Object.entries(CATEGORY_GROUPS).map(([key, group]) => `
+        <label class="choice">
+          <input type="checkbox" value="${key}" ${selected.includes(key) ? 'checked' : ''} />
+          <span class="emoji">${group.emoji}</span>
+          <span>${group.label}</span>
+        </label>
+      `).join('');
+      elements.categoryOptions.addEventListener('change', savePreferences);
+    }
+
+    function restorePreferences() {
+      const radius = localStorage.getItem(STORAGE_KEYS.radius);
+      if (radius && [...elements.radiusSelect.options].some((option) => option.value === radius)) {
+        elements.radiusSelect.value = radius;
+      }
+      try {
+        const savedCenter = JSON.parse(localStorage.getItem(STORAGE_KEYS.center) || 'null');
+        if (savedCenter?.center && Number.isFinite(savedCenter.center.lat) && Number.isFinite(savedCenter.center.lng)) {
+          state.center = savedCenter.center;
+          state.centerName = savedCenter.name || '上次使用的位置';
+        }
+      } catch (_) {}
+    }
+
+    function openSettings(force = false) {
+      elements.apiKeyInput.value = state.apiKey || localStorage.getItem(STORAGE_KEYS.apiKey) || '';
+      elements.rememberKeyCheckbox.checked = Boolean(localStorage.getItem(STORAGE_KEYS.apiKey));
+      elements.closeSettingsButton.classList.toggle('hidden', force && !state.mapReady);
+      elements.settingsBackdrop.classList.remove('hidden');
+      window.setTimeout(() => elements.apiKeyInput.focus(), 80);
+    }
+
+    function closeSettings() {
+      if (!state.mapReady && !state.apiKey) return;
+      elements.settingsBackdrop.classList.add('hidden');
+    }
+
+    async function loadGoogleMaps(apiKey) {
+      if (state.mapReady) {
+        showToast('地圖已經載入；要更換金鑰請重新整理此頁。');
+        return;
+      }
+      state.apiKey = apiKey.trim();
+      if (!state.apiKey || !state.apiKey.startsWith('AIza')) {
+        showToast('請輸入有效的 Google Maps API 金鑰。', 'error');
+        return;
+      }
+
+      if (elements.rememberKeyCheckbox.checked) {
+        localStorage.setItem(STORAGE_KEYS.apiKey, state.apiKey);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.apiKey);
+      }
+
+      elements.loadMapButton.disabled = true;
+      elements.loadMapButton.textContent = '載入中…';
+      elements.apiStatusBadge.textContent = '載入中';
+
+      window.gm_authFailure = () => {
+        elements.apiStatusBadge.textContent = '金鑰驗證失敗';
+        elements.loadMapButton.disabled = false;
+        elements.loadMapButton.textContent = '重新載入地圖';
+        showToast('API 金鑰驗證失敗，請檢查 API、帳單與金鑰限制。', 'error');
+        openSettings(true);
+      };
+
+      window.__travelFinderGoogleLoaded = async () => {
+        try {
+          await initializeMap();
+          elements.settingsBackdrop.classList.add('hidden');
+          elements.loadMapButton.disabled = false;
+          elements.loadMapButton.textContent = '載入地圖';
+        } catch (error) {
+          console.error(error);
+          elements.loadMapButton.disabled = false;
+          elements.loadMapButton.textContent = '重新載入地圖';
+          showToast(`地圖初始化失敗：${friendlyError(error)}`, 'error');
+        }
+      };
+
+      const script = document.createElement('script');
+      const params = new URLSearchParams({
+        key: state.apiKey,
+        v: 'weekly',
+        libraries: 'places,marker,geometry',
+        language: 'zh-TW',
+        region: 'TW',
+        loading: 'async',
+        callback: '__travelFinderGoogleLoaded'
+      });
+      script.src = `https://maps.googleapis.com/maps/api/js?${params.toString()}`;
+      script.async = true;
+      script.onerror = () => {
+        elements.loadMapButton.disabled = false;
+        elements.loadMapButton.textContent = '重新載入地圖';
+        elements.apiStatusBadge.textContent = '載入失敗';
+        showToast('無法載入 Google Maps，請確認網路連線。', 'error');
+      };
+      document.head.appendChild(script);
+    }
+
+    async function initializeMap() {
+      const [{ Map, InfoWindow }, { AdvancedMarkerElement }, { Place, SearchNearbyRankPreference }] = await Promise.all([
+        google.maps.importLibrary('maps'),
+        google.maps.importLibrary('marker'),
+        google.maps.importLibrary('places')
+      ]);
+
+      state.libraries = { Map, InfoWindow, AdvancedMarkerElement, Place, SearchNearbyRankPreference };
+      elements.map.innerHTML = '';
+      state.map = new Map(elements.map, {
+        center: state.center,
+        zoom: 15,
+        mapId: 'DEMO_MAP_ID',
+        mapTypeControl: false,
+        fullscreenControl: false,
+        streetViewControl: false,
+        gestureHandling: 'greedy'
+      });
+      state.infoWindow = new InfoWindow();
+      state.mapReady = true;
+      elements.apiStatusBadge.textContent = '地圖已就緒';
+      elements.apiStatusBadge.style.background = '#dcfce7';
+      elements.apiStatusBadge.style.color = '#166534';
+
+      state.map.addListener('click', (event) => {
+        const literal = toLiteral(event.latLng);
+        if (!literal) return;
+        setSearchCenter(literal, '地圖選取位置', { pan: false, zoom: false });
+        showToast('已將點選位置設為搜尋中心。');
+      });
+
+      state.map.addListener('idle', () => {
+        const center = toLiteral(state.map.getCenter());
+        if (center) elements.mapCenterLabel.textContent = `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
+      });
+
+      updateCenterVisuals();
+      setBusy(false);
+      showToast('地圖載入完成。');
+    }
+
+    function createMarkerContent(categoryKey, isCenter = false) {
+      const group = CATEGORY_GROUPS[categoryKey] || { emoji: '📍', color: '#0f766e' };
+      const pin = document.createElement('div');
+      pin.className = `marker-pin${isCenter ? ' center-pin' : ''}`;
+      pin.style.setProperty('--marker-color', isCenter ? '#111827' : group.color);
+      const icon = document.createElement('span');
+      icon.textContent = isCenter ? '★' : group.emoji;
+      pin.appendChild(icon);
+      return pin;
+    }
+
+    function setSearchCenter(center, name, options = {}) {
+      state.center = { lat: Number(center.lat), lng: Number(center.lng) };
+      state.centerName = name || '自訂位置';
+      if (state.mapReady && state.map) {
+        if (options.pan !== false) state.map.panTo(state.center);
+        if (options.zoom !== false) state.map.setZoom(16);
+        updateCenterVisuals();
+      }
+      savePreferences();
+    }
+
+    function updateCenterVisuals() {
+      const { AdvancedMarkerElement } = state.libraries;
+      if (!state.mapReady || !AdvancedMarkerElement) return;
+
+      if (state.centerMarker) state.centerMarker.map = null;
+      state.centerMarker = new AdvancedMarkerElement({
+        map: state.map,
+        position: state.center,
+        title: '搜尋中心',
+        content: createMarkerContent('', true),
+        gmpClickable: true
+      });
+      state.centerMarker.addListener('gmp-click', () => {
+        const content = document.createElement('div');
+        content.className = 'info-box';
+        content.innerHTML = `<strong>搜尋中心</strong>${escapeHtml(state.centerName)}<br>${state.center.lat.toFixed(6)}, ${state.center.lng.toFixed(6)}`;
+        state.infoWindow.setContent(content);
+        state.infoWindow.open({ map: state.map, anchor: state.centerMarker, shouldFocus: false });
+      });
+
+      if (state.radiusCircle) state.radiusCircle.setMap(null);
+      state.radiusCircle = new google.maps.Circle({
+        map: state.map,
+        center: state.center,
+        radius: Number(elements.radiusSelect.value),
+        strokeColor: '#0f766e',
+        strokeOpacity: .85,
+        strokeWeight: 2,
+        fillColor: '#14b8a6',
+        fillOpacity: .1,
+        clickable: false
+      });
+
+      elements.centerInfo.innerHTML = `<strong>${escapeHtml(state.centerName)}</strong><br>緯度 ${state.center.lat.toFixed(6)}，經度 ${state.center.lng.toFixed(6)}`;
+      elements.mapCenterLabel.textContent = `${state.center.lat.toFixed(4)}, ${state.center.lng.toFixed(4)}`;
+    }
+
+    async function findLocationByText() {
+      if (!ensureMapReady()) return;
+      const query = elements.locationQuery.value.trim();
+      if (!query) {
+        showToast('請先輸入地點名稱或地址。', 'error');
+        elements.locationQuery.focus();
+        return;
+      }
+
+      setBusy(true, '正在搜尋地點');
+      try {
+        const { Place } = state.libraries;
+        const request = {
+          textQuery: query,
+          fields: ['id', 'displayName', 'location', 'formattedAddress', 'googleMapsURI'],
+          locationBias: state.map.getCenter(),
+          language: 'zh-TW',
+          maxResultCount: 5
+        };
+        const { places } = await Place.searchByText(request);
+        if (!places?.length) {
+          throw new Error('找不到相符地點，請換一個較完整的名稱或地址。');
+        }
+        if (places.length === 1) {
+          chooseCenterPlace(places[0]);
+        } else {
+          showCandidatePlaces(places);
+        }
+      } catch (error) {
+        console.error(error);
+        showToast(friendlyError(error), 'error');
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function showCandidatePlaces(places) {
+      elements.candidateList.innerHTML = '';
+      places.forEach((place) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'candidate-button';
+        button.innerHTML = `<strong>${escapeHtml(place.displayName || '未命名地點')}</strong><span>${escapeHtml(place.formattedAddress || '')}</span>`;
+        button.addEventListener('click', () => {
+          chooseCenterPlace(place);
+          elements.candidateBackdrop.classList.add('hidden');
+        });
+        elements.candidateList.appendChild(button);
+      });
+      elements.candidateBackdrop.classList.remove('hidden');
+    }
+
+    function chooseCenterPlace(place) {
+      const location = toLiteral(place.location);
+      if (!location) {
+        showToast('這個地點沒有可用座標。', 'error');
+        return;
+      }
+      const name = place.displayName || place.formattedAddress || '搜尋地點';
+      setSearchCenter(location, name);
+      elements.locationQuery.value = name;
+      showToast(`已選擇：${name}`);
+    }
+
+    function useCurrentLocation() {
+      if (!ensureMapReady()) return;
+      if (!navigator.geolocation) {
+        showToast('此瀏覽器不支援定位，請改用地點搜尋或點選地圖。', 'error');
+        return;
+      }
+      setBusy(true, '正在取得目前位置');
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setSearchCenter({ lat: position.coords.latitude, lng: position.coords.longitude }, '目前位置');
+          setBusy(false);
+          showToast('已取得目前位置。');
+        },
+        (error) => {
+          console.warn(error);
+          setBusy(false);
+          const messages = {
+            1: '定位權限被拒絕，請改用地點搜尋或點選地圖。',
+            2: '無法取得定位資料，請確認手機定位功能。',
+            3: '定位逾時，請稍後再試。'
+          };
+          showToast(messages[error.code] || '無法取得目前位置。', 'error');
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+      );
+    }
+
+    function useMapCenter() {
+      if (!ensureMapReady()) return;
+      const center = toLiteral(state.map.getCenter());
+      if (!center) return;
+      setSearchCenter(center, '目前地圖中心', { pan: false, zoom: false });
+      showToast('已使用目前地圖中心。');
+    }
+
+    function ensureMapReady() {
+      if (state.mapReady) return true;
+      showToast('請先設定 API 金鑰並載入地圖。', 'error');
+      openSettings(true);
+      return false;
+    }
+
+    async function searchNearby() {
+      if (!ensureMapReady() || state.isLoading) return;
+      const selectedKeys = getSelectedCategories();
+      if (!selectedKeys.length) {
+        showToast('請至少選擇一種商店類型。', 'error');
+        return;
+      }
+
+      const radius = Number(elements.radiusSelect.value);
+      updateCenterVisuals();
+      savePreferences();
+      clearResultMarkers();
+      state.searchWarnings = [];
+      setBusy(true, '正在搜尋周邊商店');
+      elements.resultSubStatus.textContent = `中心：${state.centerName}｜半徑：${formatDistance(radius)}`;
+
+      try {
+        const tasks = selectedKeys.map((key) => searchCategory(key, radius));
+        const settled = await Promise.allSettled(tasks);
+        const merged = new Map();
+
+        settled.forEach((result, index) => {
+          const key = selectedKeys[index];
+          if (result.status === 'rejected') {
+            console.warn(`分類搜尋失敗：${key}`, result.reason);
+            state.searchWarnings.push(CATEGORY_GROUPS[key].label);
+            return;
+          }
+          result.value.forEach((item) => {
+            const existing = merged.get(item.id);
+            if (!existing) {
+              merged.set(item.id, item);
+            } else if (!existing.categoryKeys.includes(key)) {
+              existing.categoryKeys.push(key);
+            }
+          });
+        });
+
+        state.places = [...merged.values()]
+          .filter((place) => place.location)
+          .map((place) => ({ ...place, distance: haversineMeters(state.center, place.location) }));
+
+        renderResults();
+        renderResultMarkers();
+        fitMapToResults();
+      } catch (error) {
+        console.error(error);
+        elements.resultStatus.textContent = '搜尋失敗';
+        elements.resultSubStatus.textContent = friendlyError(error);
+        showToast(friendlyError(error), 'error');
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function searchCategory(categoryKey, radius) {
+      const { Place, SearchNearbyRankPreference } = state.libraries;
+      const group = CATEGORY_GROUPS[categoryKey];
+      const request = {
+        fields: [
+          'id',
+          'displayName',
+          'location',
+          'formattedAddress',
+          'googleMapsURI',
+          'primaryType',
+          'primaryTypeDisplayName',
+          'businessStatus'
+        ],
+        locationRestriction: { center: state.center, radius },
+        includedTypes: group.types,
+        maxResultCount: 20,
+        rankPreference: SearchNearbyRankPreference.DISTANCE,
+        language: 'zh-TW'
+      };
+      const { places } = await Place.searchNearby(request);
+      return (places || []).map((place) => ({
+        id: place.id,
+        displayName: place.displayName || '未提供名稱',
+        formattedAddress: place.formattedAddress || '',
+        location: toLiteral(place.location),
+        googleMapsURI: place.googleMapsURI || '',
+        primaryType: place.primaryType || '',
+        primaryTypeDisplayName: place.primaryTypeDisplayName || '',
+        businessStatus: place.businessStatus || '',
+        categoryKeys: [categoryKey]
+      }));
+    }
+
+    function getSortedPlaces() {
+      const places = [...state.places];
+      const sort = elements.sortSelect.value;
+      if (sort === 'name') {
+        places.sort((a, b) => a.displayName.localeCompare(b.displayName, 'zh-Hant'));
+      } else if (sort === 'category') {
+        places.sort((a, b) => {
+          const aLabel = CATEGORY_GROUPS[a.categoryKeys[0]]?.label || '';
+          const bLabel = CATEGORY_GROUPS[b.categoryKeys[0]]?.label || '';
+          return aLabel.localeCompare(bLabel, 'zh-Hant') || a.distance - b.distance;
+        });
+      } else {
+        places.sort((a, b) => a.distance - b.distance);
+      }
+      return places;
+    }
+
+    function renderResults() {
+      const places = getSortedPlaces();
+      elements.resultStatus.textContent = `找到 ${places.length} 個地點`;
+      elements.resultSubStatus.textContent = state.searchWarnings.length
+        ? `部分分類查詢失敗：${state.searchWarnings.join('、')}。其餘結果已顯示。`
+        : `中心：${state.centerName}｜半徑：${formatDistance(Number(elements.radiusSelect.value))}`;
+
+      if (!places.length) {
+        elements.resultsList.innerHTML = '<div class="card empty-state">這個範圍內沒有找到符合條件的地點。可增加搜尋半徑，或改選其他分類。</div>';
+        return;
+      }
+
+      elements.resultsList.innerHTML = places.map((place) => {
+        const mainKey = place.categoryKeys[0];
+        const group = CATEGORY_GROUPS[mainKey] || { label: '其他', emoji: '📍', color: '#0f766e' };
+        const mapUrl = getGoogleMapsUrl(place);
+        const categoryTags = place.categoryKeys.map((key) => `<span class="tag">${CATEGORY_GROUPS[key]?.label || key}</span>`).join('');
+        const typeTag = place.primaryTypeDisplayName || place.primaryType;
+        return `
+          <article class="card result-card" style="--marker-color:${group.color}" data-place-id="${escapeHtml(place.id)}">
+            <div class="result-top">
+              <div class="result-icon">${group.emoji}</div>
+              <div><h3 class="result-name">${escapeHtml(place.displayName)}</h3></div>
+              <div class="distance-pill">${formatDistance(place.distance)}</div>
+            </div>
+            <p class="address">${escapeHtml(place.formattedAddress || '未提供地址')}</p>
+            <div class="tags">${categoryTags}${typeTag ? `<span class="tag">${escapeHtml(typeTag)}</span>` : ''}</div>
+            <div class="result-actions">
+              <button class="button button-secondary button-small focus-place-button" data-id="${escapeHtml(place.id)}">地圖定位</button>
+              <a class="button button-ghost button-small" href="${escapeHtml(mapUrl)}" target="_blank" rel="noopener">Google 地圖</a>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      elements.resultsList.querySelectorAll('.focus-place-button').forEach((button) => {
+        button.addEventListener('click', () => focusPlace(button.dataset.id));
+      });
+    }
+
+    function clearResultMarkers() {
+      state.resultMarkers.forEach(({ marker }) => marker.map = null);
+      state.resultMarkers = [];
+      if (state.infoWindow) state.infoWindow.close();
+    }
+
+    function renderResultMarkers() {
+      clearResultMarkers();
+      const { AdvancedMarkerElement } = state.libraries;
+      state.places.forEach((place) => {
+        const key = place.categoryKeys[0];
+        const marker = new AdvancedMarkerElement({
+          map: state.map,
+          position: place.location,
+          title: place.displayName,
+          content: createMarkerContent(key),
+          gmpClickable: true
+        });
+        marker.addListener('gmp-click', () => openPlaceInfo(place, marker));
+        state.resultMarkers.push({ id: place.id, marker });
+      });
+    }
+
+    function openPlaceInfo(place, marker) {
+      const box = document.createElement('div');
+      box.className = 'info-box';
+      const link = getGoogleMapsUrl(place);
+      box.innerHTML = `
+        <strong>${escapeHtml(place.displayName)}</strong>
+        ${escapeHtml(place.formattedAddress || '')}<br>
+        距離搜尋中心約 ${escapeHtml(formatDistance(place.distance))}<br>
+        <a href="${escapeHtml(link)}" target="_blank" rel="noopener">在 Google 地圖開啟</a>
+      `;
+      state.infoWindow.setContent(box);
+      state.infoWindow.open({ map: state.map, anchor: marker, shouldFocus: false });
+    }
+
+    function focusPlace(id) {
+      const item = state.resultMarkers.find((entry) => entry.id === id);
+      const place = state.places.find((entry) => entry.id === id);
+      if (!item || !place) return;
+      state.map.panTo(place.location);
+      state.map.setZoom(Math.max(state.map.getZoom() || 16, 17));
+      openPlaceInfo(place, item.marker);
+      const card = elements.resultsList.querySelector(`[data-place-id="${CSS.escape(id)}"]`);
+      card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function fitMapToResults() {
+      if (!state.places.length) {
+        state.map.panTo(state.center);
+        return;
+      }
+      const bounds = new google.maps.LatLngBounds();
+      bounds.extend(state.center);
+      state.places.forEach((place) => bounds.extend(place.location));
+      state.map.fitBounds(bounds, 56);
+    }
+
+    function getGoogleMapsUrl(place) {
+      if (place.googleMapsURI) return place.googleMapsURI;
+      const query = encodeURIComponent(`${place.location.lat},${place.location.lng}`);
+      const id = place.id ? `&query_place_id=${encodeURIComponent(place.id)}` : '';
+      return `https://www.google.com/maps/search/?api=1&query=${query}${id}`;
+    }
+
+    function clearResults() {
+      state.places = [];
+      state.searchWarnings = [];
+      clearResultMarkers();
+      elements.resultStatus.textContent = '尚未搜尋';
+      elements.resultSubStatus.textContent = '搜尋結果會依直線距離排序。';
+      elements.resultsList.innerHTML = '<div class="card empty-state">設定搜尋中心與商店類型後，按下「搜尋周邊商店」。</div>';
+      if (state.mapReady) {
+        state.map.panTo(state.center);
+        state.map.setZoom(15);
+      }
+    }
+
+    function buildPlainText() {
+      const places = getSortedPlaces();
+      const lines = [
+        `旅遊周邊商店列表`,
+        `搜尋中心：${state.centerName}`,
+        `搜尋半徑：${formatDistance(Number(elements.radiusSelect.value))}`,
+        ''
+      ];
+      places.forEach((place, index) => {
+        const categories = place.categoryKeys.map((key) => CATEGORY_GROUPS[key]?.label || key).join('、');
+        lines.push(`${index + 1}. ${place.displayName}`);
+        lines.push(`   分類：${categories}`);
+        lines.push(`   距離：約 ${formatDistance(place.distance)}`);
+        lines.push(`   地址：${place.formattedAddress || '未提供'}`);
+        lines.push(`   地圖：${getGoogleMapsUrl(place)}`);
+        lines.push('');
+      });
+      return lines.join('\n');
+    }
+
+    async function copyResults() {
+      if (!state.places.length) {
+        showToast('目前沒有可複製的搜尋結果。', 'error');
+        return;
+      }
+      const text = buildPlainText();
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          throw new Error('Clipboard API unavailable');
+        }
+        showToast('已複製商店列表。');
+      } catch (_) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+        showToast('已複製商店列表。');
+      }
+    }
+
+    function csvEscape(value) {
+      return `"${String(value ?? '').replace(/"/g, '""')}"`;
+    }
+
+    function downloadCsv() {
+      const places = getSortedPlaces();
+      if (!places.length) {
+        showToast('目前沒有可匯出的搜尋結果。', 'error');
+        return;
+      }
+      const rows = [
+        ['序號', '名稱', '分類', '距離公尺', '地址', '緯度', '經度', 'Google地圖連結']
+      ];
+      places.forEach((place, index) => {
+        rows.push([
+          index + 1,
+          place.displayName,
+          place.categoryKeys.map((key) => CATEGORY_GROUPS[key]?.label || key).join('、'),
+          Math.round(place.distance),
+          place.formattedAddress,
+          place.location.lat,
+          place.location.lng,
+          getGoogleMapsUrl(place)
+        ]);
+      });
+      const csv = '\uFEFF' + rows.map((row) => row.map(csvEscape).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      const safeDate = new Date().toISOString().slice(0, 10);
+      anchor.href = url;
+      anchor.download = `周邊商店_${safeDate}.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      showToast('CSV 已建立。');
+    }
+
+    function friendlyError(error) {
+      const message = error?.message || String(error || '未知錯誤');
+      if (/REQUEST_DENIED|ApiNotActivated|BillingNotEnabled|PERMISSION_DENIED/i.test(message)) {
+        return 'Google 拒絕請求。請檢查 Places API（New）、Maps JavaScript API、帳單與金鑰限制。';
+      }
+      if (/INVALID_ARGUMENT/i.test(message)) {
+        return '搜尋參數不被 API 接受，可能是地點類型或欄位版本問題。';
+      }
+      if (/OVER_QUERY_LIMIT|RESOURCE_EXHAUSTED/i.test(message)) {
+        return 'API 配額已用完或請求過於頻繁。';
+      }
+      return message;
+    }
+
+    function bindEvents() {
+      elements.openSettingsButton.addEventListener('click', () => openSettings(false));
+      elements.closeSettingsButton.addEventListener('click', closeSettings);
+      elements.loadMapButton.addEventListener('click', () => loadGoogleMaps(elements.apiKeyInput.value));
+      elements.forgetKeyButton.addEventListener('click', () => {
+        localStorage.removeItem(STORAGE_KEYS.apiKey);
+        elements.apiKeyInput.value = '';
+        elements.rememberKeyCheckbox.checked = false;
+        state.apiKey = '';
+        showToast('已清除瀏覽器中儲存的 API 金鑰。');
+      });
+      elements.findLocationButton.addEventListener('click', findLocationByText);
+      elements.locationQuery.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') findLocationByText();
+      });
+      elements.currentLocationButton.addEventListener('click', useCurrentLocation);
+      elements.useMapCenterButton.addEventListener('click', useMapCenter);
+      elements.searchNearbyButton.addEventListener('click', searchNearby);
+      elements.clearResultsButton.addEventListener('click', clearResults);
+      elements.radiusSelect.addEventListener('change', () => {
+        savePreferences();
+        updateCenterVisuals();
+      });
+      elements.sortSelect.addEventListener('change', renderResults);
+      elements.copyButton.addEventListener('click', copyResults);
+      elements.csvButton.addEventListener('click', downloadCsv);
+      elements.closeCandidateButton.addEventListener('click', () => elements.candidateBackdrop.classList.add('hidden'));
+      elements.settingsBackdrop.addEventListener('click', (event) => {
+        if (event.target === elements.settingsBackdrop && state.mapReady) closeSettings();
+      });
+      elements.candidateBackdrop.addEventListener('click', (event) => {
+        if (event.target === elements.candidateBackdrop) elements.candidateBackdrop.classList.add('hidden');
+      });
+    }
+
+    function initApp() {
+      restorePreferences();
+      buildCategoryOptions();
+      bindEvents();
+      setBusy(false);
+      const savedKey = localStorage.getItem(STORAGE_KEYS.apiKey);
+      if (savedKey) {
+        state.apiKey = savedKey;
+        elements.rememberKeyCheckbox.checked = true;
+        loadGoogleMaps(savedKey);
+      } else {
+        openSettings(true);
+      }
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
